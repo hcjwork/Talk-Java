@@ -2,6 +2,12 @@ ConcurrentHashMap简介：
 ConcurrentHashMap是jdk1.5引入的可以保证并发操作安全的键值对集合，位于JUC(java.util.concurrent)包下，
 底层基于Node数组+链表+红黑树的数据结构实现键值对的存取，
 采用分段锁和synchronized代码块替代synchronized方法以提高并发性能。
+而在jdk1.8开始使用CAS代替分段锁，结合synchronized实现了更精细的同步控制。
+
+ConcurrentHashMap通过Node数组的新建与复制实现动态扩容，Node数组的初始长度默认为16，每次扩容两倍，
+扩容时机为数组的有效Node节点个数达到（数组长度 - 数组长度 / 4）时，比如有效节点数达到12时触发数组第一次扩容。
+ConcurrentHashMap也有缩容机制，但仅在特定条件下触发，如迁移阶段或树退化为链表时。
+一般缩容也不会缩小到初始容量，除非新建ConcurrentHashMap或者执行clear操作。
 
 ConcurrentHashMap的关键方法：
 put(K key, V value)、get(Object key)、remove(Object key)。
@@ -16,7 +22,7 @@ putVal方法源码解析：
 
 transient volatile Node<K,V>[] table; // 存储键值对的Node数组，即哈希表
 private transient volatile int sizeCtl; // 数组初始化和大小调整的控制符号
-private static final sun.misc.Unsafe U; // 用于调研CAS方法保证并发安全性
+private static final sun.misc.Unsafe U; // 用于调用CAS方法保证并发安全性
 private static final long SIZECTL; // sizeCtl变量的内存地址
 private static final int DEFAULT_CAPACITY = 16; // Node数组的初始容量
 
@@ -239,20 +245,6 @@ private final void treeifyBin(ConcurrentHashMap.Node<K,V>[] tab, int index) {
     }
 }
 
-// 树退化处理
-static <K,V> ConcurrentHashMap.Node<K,V> untreeify(ConcurrentHashMap.Node<K,V> b) {
-    ConcurrentHashMap.Node<K,V> hd = null, tl = null;
-    for (ConcurrentHashMap.Node<K,V> q = b; q != null; q = q.next) {
-        ConcurrentHashMap.Node<K,V> p = new ConcurrentHashMap.Node<K,V>(q.hash, q.key, q.val, null);
-        if (tl == null)
-            hd = p;
-        else
-            tl.next = p;
-        tl = p;
-    }
-    return hd;
-}
-
 private static final int MAXIMUM_CAPACITY = 1 << 30; // 2的30次方
 // Node数组扩容，size是当前数组长度的2倍
 private final void tryPresize(int size) {
@@ -317,6 +309,125 @@ private static final int tableSizeFor(int c) {
     // 首次扩容，c = 49，n = 63
     return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1; // 64
 }
+
+// get方法没什么值得分析的，就是根据key的哈希值去找键值对，找到有就返回value，没有找到就返回null
+public V get(Object key) {
+    ConcurrentHashMap.Node<K,V>[] tab; ConcurrentHashMap.Node<K,V> e, p; int n, eh; K ek;
+    int h = spread(key.hashCode());
+    if ((tab = table) != null && (n = tab.length) > 0 &&
+            (e = tabAt(tab, (n - 1) & h)) != null) {
+        if ((eh = e.hash) == h) {
+            if ((ek = e.key) == key || (ek != null && key.equals(ek)))
+                return e.val;
+        }
+        else if (eh < 0)
+            return (p = e.find(h, key)) != null ? p.val : null;
+        while ((e = e.next) != null) {
+            if (e.hash == h &&
+                    ((ek = e.key) == key || (ek != null && key.equals(ek))))
+                return e.val;
+        }
+    }
+    return null;
+}
+
+// remove方法，移除键值对，数组中的Node节点、链表中的节点、红黑树的节点的数量都会收到影响
+// 从红黑树退化为链表的关键方法在remove的处理中出现
+public V remove(Object key) {
+    return replaceNode(key, null, null);
+}
+
+final V replaceNode(Object key, V value, Object cv) {
+    int hash = spread(key.hashCode());
+    for (Node<K,V>[] tab = table;;) {
+        Node<K,V> f; int n, i, fh;
+        if (tab == null || (n = tab.length) == 0 ||
+            (f = tabAt(tab, i = (n - 1) & hash)) == null)
+            break;
+        else if ((fh = f.hash) == MOVED)
+            tab = helpTransfer(tab, f);
+        else {
+            V oldVal = null;
+            boolean validated = false;
+            synchronized (f) {
+                if (tabAt(tab, i) == f) {
+                    if (fh >= 0) {
+                        validated = true;
+                        for (Node<K,V> e = f, pred = null;;) {
+                            K ek;
+                            if (e.hash == hash &&
+                                ((ek = e.key) == key ||
+                                 (ek != null && key.equals(ek)))) {
+                                V ev = e.val;
+                                if (cv == null || cv == ev ||
+                                    (ev != null && cv.equals(ev))) {
+                                    oldVal = ev;
+                                    if (value != null)
+                                        e.val = value;
+                                    else if (pred != null)
+                                        pred.next = e.next;
+                                    else
+                                        setTabAt(tab, i, e.next);
+                                }
+                                break;
+                            }
+                            pred = e;
+                            if ((e = e.next) == null)
+                                break;
+                        }
+                    }
+                    else if (f instanceof TreeBin) {
+                        validated = true;
+                        TreeBin<K,V> t = (TreeBin<K,V>)f;
+                        TreeNode<K,V> r, p;
+                        if ((r = t.root) != null &&
+                            (p = r.findTreeNode(hash, key, null)) != null) {
+                            V pv = p.val;
+                            if (cv == null || cv == pv ||
+                                (pv != null && cv.equals(pv))) {
+                                oldVal = pv;
+                                if (value != null)
+                                    p.val = value;
+                                else if (t.removeTreeNode(p))
+                                    // 红黑树退化为链表
+                                    setTabAt(tab, i, untreeify(t.first));
+                            }
+                        }
+                    }
+                }
+            }
+            if (validated) {
+                if (oldVal != null) {
+                    if (value == null)
+                        addCount(-1L, -1);
+                    return oldVal;
+                }
+                break;
+            }
+        }
+    }
+    return null;
+}
+
+static final int UNTREEIFY_THRESHOLD = 6; // 树退化为链表的阈值。节点数与阈值6的比较在transfer()方法中，太长了不好展示
+// 截取部分展示如下
+// ln = (lc <= UNTREEIFY_THRESHOLD) ? untreeify(lo) :  (hc != 0) ? new TreeBin<K,V>(lo) : t;
+// hn = (hc <= UNTREEIFY_THRESHOLD) ? untreeify(hi) :  (lc != 0) ? new TreeBin<K,V>(hi) : t;
+
+// 树退化处理
+static <K,V> ConcurrentHashMap.Node<K,V> untreeify(ConcurrentHashMap.Node<K,V> b) {
+    ConcurrentHashMap.Node<K,V> hd = null, tl = null;
+    for (ConcurrentHashMap.Node<K,V> q = b; q != null; q = q.next) {
+        ConcurrentHashMap.Node<K,V> p = new ConcurrentHashMap.Node<K,V>(q.hash, q.key, q.val, null);
+        if (tl == null)
+            hd = p;
+        else
+            tl.next = p;
+        tl = p;
+    }
+    return hd;
+}
+
 
 
 问题1：ConcurrentHashMap为何不支持key和value为null
