@@ -9,6 +9,12 @@ ConcurrentHashMap通过Node数组的新建与复制实现动态扩容，Node数�
 ConcurrentHashMap也有缩容机制，但仅在特定条件下触发，如迁移阶段或树退化为链表时。
 一般缩容也不会缩小到初始容量，除非新建ConcurrentHashMap或者执行clear操作。
 
+ConcurrentHashMap在key发生冲突时，先检查数组长度是否达到阈值64，
+如果没有先扩容数组后重新计算数组中Node节点的key的哈希值，重新路由定位数组中存储的位置，从旧的数组转移到新的数组中；
+如果已到阈值64，则以链表方式解决哈希冲突，新的key和value组成新的Node节点挂在数组中已有Node节点的next指针上。
+当链表节点数达到阈值8时，转化链表为红黑树存储哈希冲突的键值对数据，以TreeNode保存key和value值。
+而在移除键值对的过程中，如果红黑树的节点数降低到阈值6，则从树退化为链表。
+
 ConcurrentHashMap的关键方法：
 put(K key, V value)、get(Object key)、remove(Object key)。
 
