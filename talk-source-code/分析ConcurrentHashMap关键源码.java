@@ -337,8 +337,8 @@ public V get(Object key) {
     return null;
 }
 
-// remove方法，移除键值对，数组中的Node节点、链表中的节点、红黑树的节点的数量都会收到影响
-// 从红黑树退化为链表的关键方法在remove的处理中出现
+// remove方法，移除键值对，数组中的Node节点、链表中的节点、红黑树的节点的数量都会受到影响
+// 从红黑树退化为链表的关键方法untreeify()在remove的处理中有出现
 public V remove(Object key) {
     return replaceNode(key, null, null);
 }
@@ -476,7 +476,7 @@ HashMap之所以支持null值的key或value，是因为定位不同，HashMap不
 
 问题6：为什么在比较了新旧键值对的key的哈希值后，还要比较两个key是否相等？
 因为不同的key的哈希值也可能相同，为了保证操作的正确性和严谨性，必须还要比较两个key是否相等，
-只有哈希值和key本身相同，才能确定是同一个key。
+只有哈希值和key本身都相同，才能确定是同一个key。
 
 启示1：双重检查锁定结合volatile保证并发修改安全。
 启示2：边界条件处理复杂时禁止输入可能会更简单高效。（例如一些业务中的极端边界，可以考虑直接校验或过滤掉）
