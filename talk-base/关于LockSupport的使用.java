@@ -5,8 +5,8 @@ LockSupport是juc包提供的一个线程阻塞与唤醒的工具类，基于Uns
 LockSupport的实现更靠近底层，提供的方法也不是很多，常用的都是静态方法，主要是park和unpark方法。
 还有parkNacos()、parkUntil()等方法支持设置线程阻塞的超时时间，类似于对象的wait(long time)方法。
 
-通过LockSupport.park()可以阻塞线程，通过LockSupport.unpark()可以唤醒线程。
-但LockSupport.unpark()需要传递一个线程对象，native代码实现中应该也涉及到了操作系统的方法。
+通过LockSupport.park()可以阻塞当前线程，也可以指定要阻塞的线程。
+通过LockSupport.unpark()可以唤醒线程，但LockSupport.unpark()需要传递一个线程对象，native代码实现中应该也涉及到了操作系统的方法。
 
 LockSupport.unpark()可以指定唤醒哪个线程，这相比于notify()提供了更精确的线程唤醒控制，
 但不支持唤醒所有线程，相比于notifyAll()又缺少了灵活性。
