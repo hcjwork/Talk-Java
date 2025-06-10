@@ -48,6 +48,7 @@ private static void print(int curId, int nextId) {
                 }
             }
             // 如果被唤醒，先检查下是不是已经超过100了，因为有可能在当前线程阻塞期间已经被运行到了101
+            // 主要如果这个判断放在阻塞判断的前面，会导致有线程打印超过100
             if (counter > 100) {
                 // 超过100，唤醒所有阻塞线程，退出循环
                 lock.notifyAll();
@@ -62,6 +63,8 @@ private static void print(int curId, int nextId) {
         }
     }
 }
+
+遗留的小问题：虽然三个线程确实交替执行打印1~100了，但运行程序并没有正常结束而是出于等待状态。
 
 对象的wait、notify、notifyAll方法必须要在synchronized的同步块中使用，这一点就导致灵活性降低了，所以实际应用中
 通常用juc包下的锁或并发工具类如ReentrantLock、LockSupport等代替wait/notify来实现多线程的并发同步控制。
