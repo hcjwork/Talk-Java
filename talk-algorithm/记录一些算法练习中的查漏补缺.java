@@ -12,7 +12,7 @@
 %nd是对数字进行前导补空格，其中%和d是固定写法，n是最终要达到字符串长度。只能用于数字的补位，用于字符串会报错。
 %0nd则可以直接指定前导补位为0，只能用于数字的补位。
 
-2、怎么判断一个字符串是否由若干个连续的1后跟若干个连续的0组成？<br>
+2、怎么判断一个字符串是否由若干个连续的1后跟若干个连续的0组成？
 1）使用正则表达式（推荐）。规则：匹配一个或多个连续的'1'后跟一个或多个连续的'0'
 示例：
 boolean isValid = str.matches("1+0+");
@@ -39,4 +39,24 @@ public static boolean isOneFollowedByZero(String str) {
 
     // 检查0之前是否全是1
     return str.substring(0, firstZeroIndex).chars().allMatch(c -> c == '1');
+}
+
+3、如何判断一个整数是否为素数（质数）？
+分析：素数也就是质数，是大于1的正整数，且只能被1和其本身整除。
+2是质数，大于2的数则可以计算2到其平方根范围，是否有能被整除的数，如果有则不是质数。
+利用Math.sqrt()方法可以求一个整数的平方根。
+示例代码：
+private static boolean isTarget(int num) {
+    if (num < 2) {
+        return false;
+    }
+    if (num == 2) {
+        return true;
+    }
+    for (int i = 2; i <= Math.sqrt(); i++) {
+        if (num % i == 0) {
+            return false;
+        }
+    }
+    return true;
 }
