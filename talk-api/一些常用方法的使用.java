@@ -64,3 +64,26 @@ Arrays.sort(arr, Collections.reverseOrder());
 因为Collections.reverseOrder()返回的Comparator是带泛型的，只能用于引用类型数据的比较。
 
 
+9、String对象的replaceAll()方法和trim()方法
+String对象的replaceAll()方法可以用来替换目标字符串为指定字符串，trim()方法可以剪除字符两端的空格，
+但trim()方法只能去除ASCII值为32的空格，即半角空格，
+无法去除全角空格（ASCII值为160或Unicode编码为\u00A0）或其他类型的空白字符，如制表符(\t)或换行符(\n)，
+这是比较坑的一点，因此实际使用trim()方法时可能无法剪除字符串前后的某些空格。
+
+replaceAll()方法也有类似的问题，如果想要通过replaceAll(" ", "")删除掉空格，会发现有部分删不掉，
+虽然都是用键盘上的space键敲的空格，半角和全角的空格也看起来没啥差别，所以最好别用这样方式，
+而是用正则，例如：replaceAll("\\s+", "")，这样才能正常删除所有类型的空格。
+
+10、StringBuilder对象的reserved()方法
+StringBuilder对象的reserved()方法可以快速把StringBuilder所拼接的字符串反转，这个方法很实用。
+
+11、java.math包下的BigInteger类
+如果需要计算两个超大整数的相加，可以采用字符对齐，前导补0，然后从低位到高位逐位相加计算，可以用java.math.BigInteger类计算。
+例如：
+String a = "12323333333333354";
+String b = "99999999454821";
+BigInteger add = new BigInteger(a).add(new BigInteger(b));
+System.out.println(add.toString());
+
+
+
