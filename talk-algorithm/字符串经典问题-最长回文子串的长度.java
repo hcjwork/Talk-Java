@@ -17,8 +17,7 @@ getMax()要传递原字符串，left指针起始位置，right指针起始位置
 int len1 = getMax(str, i, i); // 这是字符数为奇数时的情形，left和right的起始位置都是同一个中心字符
 int len2 = getMax(str, i, i + 1); // 这是字符数为偶数时的情形，left指向中心左边这个，right指向右边这个字符
 然后取其中最大的。
-注意到对偶数情形的计算，传递了i+1，为防止越界，最好对str的原始长度检查下，
-如果长度小于等于1，就直接处理返回，以免遍历处理时因为i+1越界出现异常。
+i+1如果越界了，getMax的越界判断会起作用了，
 
 那么getMax中具体如何处理？
 其实就是当str.charAt(left) == str.charAt(right)且left和right不越界时，就继续往两边找下一个字符比较，不同就结束。
