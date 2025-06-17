@@ -7,6 +7,7 @@ fromIndex参数，可以指定从此位置往后到原字符串末尾这个范�
 Integer的静态方法toString()可以将一个整数转为指定进制的字符串。
 比如将十进制整数100转为二进制的字符串：
 String result = Integer.toString(100, 2);
+但注意前导0不会展示。
 
 3、Character的isLetter()方法
 Character的isLetter()静态方法，可以快速判断一个字符是否是英文字母。
@@ -35,5 +36,31 @@ arrayList.sort(new Comparator<Character>() {
         return Character.toLowerCase(c1) - Character.toLowerCase(c2);
     }
 });
+
+6、Character的isLetter()方法
+Character的isLetter()方法可以快速判断一个字符是否是字母，这个方法在字符串相关的算法中比较常用。
+例如：
+Character.isLetter("@");
+
+7、Long的parseLong()方法
+Long的parseLong()方法除了支持传递一个字符串参数之外，还支持传递一个进制数。
+例如可以利用此方法将二进制字符串转化为十进制的长整型，
+long l = Long.parseLong("00100101", 2);
+类似的还有Integer的parseInt()方法、Short的parseShort()方法，也支持传递进制数，
+可以将对应进制的字符串转为十进制的整数。
+
+8、Collections的sort()方法
+Collections的sort()方法可用于给List集合排序，默认是升序排序，如果想要倒序排或自定义排序，
+可以传递一个Comparator对象。
+例如：
+ArrayList<Map.Entry<Character, Integer>> list = new ArrayList<>(map.entrySet());
+Collections.sort(list, Map.Entry.comparingByValue(Collections.reverseOrder()));
+如果是想要倒序排，可以用Collections.reverseOrder()传递一个反序的Comparator实现。
+
+类似的如Arrays.sort()也可以传递反序的Comparator实现，但数组的元素得是引用类型的，比如包装类，
+例如：
+Integer[] arr = new Integer[] {1, 2, 3, 4};
+Arrays.sort(arr, Collections.reverseOrder());
+因为Collections.reverseOrder()返回的Comparator是带泛型的，只能用于引用类型数据的比较。
 
 
