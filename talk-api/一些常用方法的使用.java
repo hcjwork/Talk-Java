@@ -106,3 +106,9 @@ Arrays.sort(env, (arr1, arr2) -> {
 System.out.println("排序后：");
 printArr(env);
 
+上面的这个比较器的实现也可以简化为：
+Arrays.sort(env, (arr1, arr2) -> arr1[0] == arr2[0] ? arr2[1] - arr1[1] : arr1[0] - arr2[0]);
+
+13、Arrays的fill()方法
+这个方法可以快速将数组的所有元素初始化为指定值。当然for循环手动赋值也可以。用这个方法会更简洁些。
+例如：Arrays.fill(arr, -1); // 全部初始化为-1
