@@ -85,5 +85,24 @@ String b = "99999999454821";
 BigInteger add = new BigInteger(a).add(new BigInteger(b));
 System.out.println(add.toString());
 
-
+12、利用Comparator实现二维数组自定义排序
+例如先按第一个元素升序排，第一个元素相等时按照第二个元素降序排。
+int[][] env = new int[][] {
+    {1, 8}, {6, 8}, {1, 6}, {5, 4}, {4, 8}
+};
+System.out.println(env.length);
+System.out.println("排序前：");
+printArr(env);
+Arrays.sort(env, (arr1, arr2) -> {
+    // 先按第一个元素升序排
+    int compare = arr1[0] - arr2[0];
+    if (compare == 0) {
+        // 第一个元素先相等时再按第二个元素降序排
+        return arr2[1] - arr1[1];
+    } else {
+        return compare;
+    }
+});
+System.out.println("排序后：");
+printArr(env);
 
