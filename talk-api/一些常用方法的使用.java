@@ -122,3 +122,10 @@ BigDecimal的setScale()方法支持保留几位小数，并支持指定舍入规
 例如将浮点类型数1.223按四舍五入保留5位小数，不足位的补0。
 // 注意在创建BigDecimal时最好传入的是字符串，避免出现精度丢失。
 new BigDecimal(1.223 + "").setScale(5, BigDecimal.ROUND_HALF_UP).toPlainString();
+
+
+16、Arrays的deepToString()方法
+一般一位数组的打印使用Arrays.toString()方法就行了，但二维数组或多维数组用toString()打印的会是地址值，
+如果想要打印成“[[1,2]]”这种格式的话，使用deepToString()方法会比较高效，替代手动for循环嵌套打印。
+例如：
+System.out.println(Arrays.deepToString(arr));
