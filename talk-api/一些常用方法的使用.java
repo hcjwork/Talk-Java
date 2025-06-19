@@ -112,3 +112,13 @@ Arrays.sort(env, (arr1, arr2) -> arr1[0] == arr2[0] ? arr2[1] - arr1[1] : arr1[0
 13、Arrays的fill()方法
 这个方法可以快速将数组的所有元素初始化为指定值。当然for循环手动赋值也可以。用这个方法会更简洁些。
 例如：Arrays.fill(arr, -1); // 全部初始化为-1
+
+14、Math的PI常量与pow()方法
+用于计算π相关的问题很方便。例如计算半径为r的圆的面积：
+double d = Math.PI * Math.pow(r, 2);
+
+15、BigDecimal的setScale()方法
+BigDecimal的setScale()方法支持保留几位小数，并支持指定舍入规则，在BigDecimal类中有很多规则常量可选用。
+例如将浮点类型数1.223按四舍五入保留5位小数，不足位的补0。
+// 注意在创建BigDecimal时最好传入的是字符串，避免出现精度丢失。
+new BigDecimal(1.223 + "").setScale(5, BigDecimal.ROUND_HALF_UP).toPlainString();
