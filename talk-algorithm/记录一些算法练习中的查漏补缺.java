@@ -60,3 +60,25 @@ private static boolean isTarget(int num) {
     }
     return true;
 }
+
+4、判断一个整数是否是丑数（质因数只包含2、3或5的数，1也是丑数）？
+public boolean isUgly(int n) {
+    // 非正数，不是丑数
+    if (n <= 0) {
+        return false;
+    }
+    // 丑数最终都能被分解成2、3、5组成，所以n=2^x * 3^y * 5^z
+    // x/y/z >= 0
+    // 所以只要不断整除2、3、5如果剩下就是1，说明就是丑数，因为已经不存在其他质数因子了
+    while (n % 2 == 0) {
+        n /= 2;
+    }
+    while (n % 3 == 0) {
+        n /= 3;
+    }
+    while (n % 5 == 0) {
+        n /= 5;
+    }
+
+    return n == 1;
+}
