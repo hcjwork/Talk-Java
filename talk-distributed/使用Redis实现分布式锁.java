@@ -8,7 +8,12 @@ setnx是set if not exists的简写，意思是只有在键不存在的时候才�
 set key value nx ex 10，当前仅当key不存在时才进行值设置，设值时指定key的过期时间为10s。
 set key value nx px 5000，当前仅当key不存在时才进行值设置，设值时指定key的过期时间为5000ms，即5s。
 可以用ttl命令查看key的剩余有效时间，例如：ttl key。
-实际应用时更推荐set nx ex/px命令。
+
+setnx结合expire的方式实现起来更复杂，造成线程死锁的可能性也更高，效率也不占优势，
+所以实际应用时更推荐set nx ex/px命令。
+当然现在有很成熟的Redis客户端框架可以直接用，比如Redisson，对于使用Redis实现分布锁的各种问题都做了有效解决和优化，
+像锁删除、锁等待、锁续期、集群提供分布式锁等。
+
 
 为什么要在设置键值的同时设置键的过期时间？
 一方面是为了减少其他线程等待锁的开销，一方面是增加分布式锁管理的灵活性。
@@ -41,11 +46,11 @@ String lockValue = UUID.randomUUID().toString() + ":" + orderId;
 确认键的值是之前设置的，没有问题后再删除，这部分操作我们通常考虑使用lua脚本将确认和删除两个步骤合并为一个原子性操作。
 例如：
 String script =
-    "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-    "   return redis.call('del', KEYS[1]) " +
-    "else " +
-    "   return 0 " +
-    "end";
+        "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+        "   return redis.call('del', KEYS[1]) " +
+        "else " +
+        "   return 0 " +
+        "end";
 RedisScript<Long> redisScript = new DefaultRedisScript<>(script, Long.class);
 redisTemplate.execute(redisScript, Collections.singletonList(lockKey), lockValue);
 
@@ -66,4 +71,5 @@ private void startWatchdog() {
         }
     }, expireTime / 3, expireTime / 3, TimeUnit.MILLISECONDS);
 }
+
 
