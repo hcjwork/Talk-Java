@@ -59,6 +59,10 @@ executor.scheduleAtFixedRate(() -> {
 这些框架已经处理好zookeeper做分布式锁的各类问题，也有更好的性能，更丰富便捷的API，实际生产中我们一般直接引用这些成熟框架，
 而不是手动做zk实现分布式锁的开发，毕竟手动实现更复杂需要考虑平衡的东西也更多，学习、开发、测试成本也更高。
 推荐使用Curator框架。
+Curator主要用InterProcessMutex来创建分布式锁。
+InterProcessMutex的构造方法传递一个Zookeeper客户端和指定节点根路径。
+通过InterProcessMutex实例的acquire()方法获取锁，支持超时等待。
+InterProcessMutex实例的release()方法用于释放锁，释放锁时删除该线程创建的临时顺序节点。
 
 Zookeeper通过会话机制天然解决了锁续期问题，相比Redis的实现更加可靠，
 这也是Zookeeper在强一致性场景下被优先选择的原因之一。
