@@ -29,6 +29,16 @@ Hystrix熔断器的滑动窗口统计支持两种模式，一种是以时间为�
 熔断时间默认持续5秒（可配置），在熔断器OPEN期间，所有的请求调用会快速失败。
 
 Hystrix通过线程池方式来实现限流，代替传统的限流算法，线程池满时会直接抛出HystrixRuntimeException，快速失败。
+使用GlobalExceptionHandler全局异常处理器，兜底处理HystrixRuntimeException。
+例如：
+@RestControllerAdvice
+public class GlobalFallbackHandler {
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    @ExceptionHandler(HystrixRuntimeException.class)
+    public String handleHystrixException(HystrixRuntimeException e) {
+        return "Global Fallback: Service unavailable. Reason: " + e.getFailureType();
+    }
+}
 
 二、核心依赖（以Maven为例）
 1、Hystrix依赖
