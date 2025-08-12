@@ -1,0 +1,3 @@
+MVCC，Multiple Version Concurrency Control，多版本并发控制。
+其实就是给每个并发事务创建一个当前数据的快照，每个并发事务在持续期间读取的都是自己的那一份快照数据。
+这样解决了幻读问题。
