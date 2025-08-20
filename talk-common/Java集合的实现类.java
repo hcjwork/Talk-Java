@@ -20,7 +20,8 @@ ConcurrentSkipListSet、ConcurrentSkipListMap
 HashSet、LinkedHashSet、TreeSet、CopyOnWriteArraySet、ConcurrentSkipListSet
 
 常用集合实现类中并发安全的有：
-Vector、CopyOnWriteArrayList、CopyOnWriteArraySet、Hashtable、ConcurrentHashMap
+Vector、CopyOnWriteArrayList、CopyOnWriteArraySet、Hashtable、ConcurrentHashMap、
+ConcurrentSkipListMap、ConcurrentSkipListSet
 
 常用集合实现类中包含数组结构的有：
 ArrayList、Vector、HashMap、ConcurrentHashMap、Hashtable、CopyOnWriteArrayList、CopyOnWriteArraySet、
@@ -44,7 +45,7 @@ TreeSet、TreeMap
 常用集合复杂实现类的实现原理：
 HashMap -> 数组 + 链表/红黑树
 ConcurrentHashMap -> 数组 + 链表/红黑树 + 分段锁 + synchronized -> 并发安全
-ConcurrentSkipListMap/Set -> 多层有序链表 + 跳表技术
+ConcurrentSkipListMap/Set -> 多层有序链表 + 跳表技术 + CAS -> 并发安全
 CopyOnWriteArrayList/Set -> 数组 + 写时复制技术 -> 并发安全
 TreeMap/Set -> 自定义节点 + 自平衡搜索二叉树/红黑树
 
@@ -52,8 +53,11 @@ TreeMap/Set -> 自定义节点 + 自平衡搜索二叉树/红黑树
 队列和栈通常是基于数组或链表实现。因此其实只有两种最底层的数据结构：数组 和 自定义节点对象。
 数组要求存储空间连续并且元素类型统一，自定义节点对象的存储空间可以分散但单个对象的存储不可分割。
 
-ConcurrentHashMap中的分段锁继承自ReentrantLock。
+ConcurrentHashMap中的分段锁（Segment）继承自ReentrantLock，通过Segment+synchronized保证并发安全。
+ConcurrentSkipList/Set通过UNSAFE的CompareAndSwap(CAS，比较并交换)无锁化编程来保证并发安全。
+CopyOnWriteArrayList/Set通过ReentrantLock保证并发安全。
 非并发安全集合可以通过Collections.synchronizedXxx方法转化为并发安全集合，原理就是给原来的关键操作套上synchronized。
 
 并发场景下需使用并发安全集合，非并发场景比如方法体内且未出现引用逃出方法作用域可以使用非并发安全集合提升效率。
-读到写少的场景通常使用CopyOnWriteArrayList/Set，写多的场景通常使用ConcurrentHashMap或锁机制。
+读到写少的场景通常使用CopyOnWriteArrayList/Set，写多的场景通常使用ConcurrentHashMap或锁机制，
+需要并发安全且要有序性时使用ConcurrentSkipList/Set。
